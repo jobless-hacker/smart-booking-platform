@@ -1,6 +1,12 @@
 const express = require("express");
 const { body, param } = require("express-validator");
-const { addSlot, deleteSlot, exportBookings } = require("../controllers/adminController");
+const {
+  addSlot,
+  deleteSlot,
+  exportBookings,
+  getBookings,
+  cancelBooking
+} = require("../controllers/adminController");
 const authMiddleware = require("../middleware/authMiddleware");
 const validateRequest = require("../middleware/validateRequest");
 
@@ -28,6 +34,15 @@ router.delete(
   [param("id").isInt({ min: 1 }).withMessage("Valid slot id is required")],
   validateRequest,
   deleteSlot
+);
+
+router.get("/bookings", authMiddleware, getBookings);
+router.delete(
+  "/bookings/:id",
+  authMiddleware,
+  [param("id").isInt({ min: 1 }).withMessage("Valid booking id is required")],
+  validateRequest,
+  cancelBooking
 );
 
 router.get("/export", authMiddleware, exportBookings);

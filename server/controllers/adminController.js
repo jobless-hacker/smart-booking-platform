@@ -1,6 +1,7 @@
 const fs = require("fs");
 const prisma = require("../utils/prisma");
 const { writeBookingsCsv } = require("../utils/csvExporter");
+const { sendBookingCancellation } = require("../utils/mailer");
 
 async function addSlot(req, res, next) {
   try {
@@ -68,8 +69,67 @@ async function exportBookings(req, res, next) {
   }
 }
 
+async function getBookings(req, res, next) {
+  try {
+    if (req.user.role !== "ADMIN") {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+
+    const bookings = await prisma.booking.findMany({
+      include: { slot: true },
+      orderBy: { createdAt: "desc" }
+    });
+
+    return res.json(bookings);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function cancelBooking(req, res, next) {
+  try {
+    if (req.user.role !== "ADMIN") {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+
+    const bookingId = Number(req.params.id);
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: { slot: true }
+    });
+
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.booking.delete({ where: { id: bookingId } });
+      await tx.slot.update({
+        where: { id: booking.slotId },
+        data: { isBooked: false }
+      });
+    });
+
+    sendBookingCancellation({
+      to: booking.email,
+      name: booking.name,
+      slot: {
+        date: booking.slot.date.toISOString().split("T")[0],
+        startTime: booking.slot.startTime,
+        endTime: booking.slot.endTime
+      }
+    }).catch(() => {});
+
+    return res.json({ message: "Booking cancelled" });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   addSlot,
   deleteSlot,
-  exportBookings
+  exportBookings,
+  getBookings,
+  cancelBooking
 };

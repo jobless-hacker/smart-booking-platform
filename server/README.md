@@ -15,6 +15,8 @@ npm run dev
 - `POST /api/auth/login`
 - `POST /api/admin/slots` (admin token required)
 - `DELETE /api/admin/slots/:id` (admin token required)
+- `GET /api/admin/bookings` (admin token required)
+- `DELETE /api/admin/bookings/:id` (admin token required)
 - `GET /api/admin/export` (admin token required)
 - `GET /api/slots`
 - `POST /api/book`

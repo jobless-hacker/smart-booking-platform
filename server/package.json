@@ -11,7 +11,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-    "admin:create": "node scripts/createAdmin.js"
+    "admin:create": "node scripts/createAdmin.js",
+    "demo:seed": "node scripts/seedDemoData.js"
   },
   "dependencies": {
     "@prisma/client": "^6.0.0",

@@ -6,14 +6,14 @@ import useRequireAdmin from "@/lib/useRequireAdmin";
 import { API_BASE_URL, authApi } from "@/lib/api";
 
 export default function AdminBookingsPage() {
-  const { token, ready } = useRequireAdmin();
+  const { token, accessCode, ready } = useRequireAdmin();
   const [bookings, setBookings] = useState([]);
   const [message, setMessage] = useState({ type: "", text: "" });
 
   const loadBookings = useCallback(async () => {
-    const data = await authApi("/api/admin/bookings", token, { method: "GET" });
+    const data = await authApi("/api/admin/bookings", token, accessCode, { method: "GET" });
     setBookings(data);
-  }, [token]);
+  }, [token, accessCode]);
 
   useEffect(() => {
     if (!ready) return;
@@ -24,7 +24,7 @@ export default function AdminBookingsPage() {
   async function onCancel(bookingId) {
     setMessage({ type: "", text: "" });
     try {
-      await authApi(`/api/admin/bookings/${bookingId}`, token, { method: "DELETE" });
+      await authApi(`/api/admin/bookings/${bookingId}`, token, accessCode, { method: "DELETE" });
       setMessage({ type: "success", text: "Booking cancelled." });
       await loadBookings();
     } catch (error) {
@@ -37,7 +37,8 @@ export default function AdminBookingsPage() {
     try {
       const response = await fetch(`${API_BASE_URL}/api/admin/export`, {
         headers: {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
+          "x-admin-access-code": accessCode
         }
       });
 

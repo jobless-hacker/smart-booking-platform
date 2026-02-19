@@ -23,12 +23,26 @@ export async function publicApi(path, options = {}) {
   return parseResponse(response);
 }
 
-export async function authApi(path, token, options = {}) {
+export async function adminPublicApi(path, accessCode, options = {}) {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(accessCode ? { "x-admin-access-code": accessCode } : {}),
+      ...(options.headers || {})
+    }
+  });
+
+  return parseResponse(response);
+}
+
+export async function authApi(path, token, accessCode, options = {}) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
+      ...(accessCode ? { "x-admin-access-code": accessCode } : {}),
       ...(options.headers || {})
     }
   });

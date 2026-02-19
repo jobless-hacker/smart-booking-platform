@@ -12,7 +12,7 @@ const INITIAL_FORM = {
 };
 
 export default function AdminSlotsPage() {
-  const { token, ready } = useRequireAdmin();
+  const { token, accessCode, ready } = useRequireAdmin();
   const [slots, setSlots] = useState([]);
   const [form, setForm] = useState(INITIAL_FORM);
   const [submitting, setSubmitting] = useState(false);
@@ -38,7 +38,7 @@ export default function AdminSlotsPage() {
     setSubmitting(true);
 
     try {
-      await authApi("/api/admin/slots", token, {
+      await authApi("/api/admin/slots", token, accessCode, {
         method: "POST",
         body: JSON.stringify(form)
       });
@@ -55,7 +55,7 @@ export default function AdminSlotsPage() {
   async function onDelete(slotId) {
     setMessage({ type: "", text: "" });
     try {
-      await authApi(`/api/admin/slots/${slotId}`, token, { method: "DELETE" });
+      await authApi(`/api/admin/slots/${slotId}`, token, accessCode, { method: "DELETE" });
       setMessage({ type: "success", text: "Slot removed." });
       await loadSlots();
     } catch (error) {

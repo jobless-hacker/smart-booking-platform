@@ -7,7 +7,7 @@ import useRequireAdmin from "@/lib/useRequireAdmin";
 import { authApi } from "@/lib/api";
 
 export default function AdminDashboardPage() {
-  const { token, ready } = useRequireAdmin();
+  const { token, accessCode, ready } = useRequireAdmin();
   const [stats, setStats] = useState({ slots: 0, bookings: 0 });
   const [error, setError] = useState("");
 
@@ -17,8 +17,8 @@ export default function AdminDashboardPage() {
     async function loadData() {
       try {
         const [slots, bookings] = await Promise.all([
-          authApi("/api/slots", token, { method: "GET" }),
-          authApi("/api/admin/bookings", token, { method: "GET" })
+          authApi("/api/slots", token, accessCode, { method: "GET" }),
+          authApi("/api/admin/bookings", token, accessCode, { method: "GET" })
         ]);
 
         setStats({
@@ -31,7 +31,7 @@ export default function AdminDashboardPage() {
     }
 
     loadData();
-  }, [ready, token]);
+  }, [ready, token, accessCode]);
 
   if (!ready) return null;
 

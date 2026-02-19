@@ -1,12 +1,17 @@
 const bcrypt = require("bcrypt");
 const prisma = require("../utils/prisma");
 const { signToken } = require("../utils/jwt");
+const demoStore = require("../utils/demoStore");
 
 async function adminLogin(req, res, next) {
   try {
     const { email, password } = req.body;
+    const isDemoMode = process.env.DEMO_MODE === "true";
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = isDemoMode
+      ? demoStore.findAdminByEmail(email)
+      : await prisma.user.findUnique({ where: { email } });
+
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }

@@ -2,6 +2,7 @@ const fs = require("fs");
 const prisma = require("../utils/prisma");
 const { writeBookingsCsv } = require("../utils/csvExporter");
 const { sendBookingCancellation } = require("../utils/mailer");
+const demoStore = require("../utils/demoStore");
 
 async function addSlot(req, res, next) {
   try {
@@ -10,6 +11,12 @@ async function addSlot(req, res, next) {
     }
 
     const { date, startTime, endTime } = req.body;
+    const isDemoMode = process.env.DEMO_MODE === "true";
+
+    if (isDemoMode) {
+      const slot = demoStore.addSlot({ date, startTime, endTime });
+      return res.status(201).json(slot);
+    }
 
     const slot = await prisma.slot.create({
       data: {
@@ -32,6 +39,19 @@ async function deleteSlot(req, res, next) {
     }
 
     const slotId = Number(req.params.id);
+    const isDemoMode = process.env.DEMO_MODE === "true";
+
+    if (isDemoMode) {
+      const result = demoStore.deleteSlot(slotId);
+      if (result.error === "NOT_FOUND") {
+        return res.status(404).json({ message: "Slot not found" });
+      }
+      if (result.error === "BOOKED") {
+        return res.status(400).json({ message: "Cannot delete booked slot" });
+      }
+      return res.json({ message: "Slot deleted" });
+    }
+
     const slot = await prisma.slot.findUnique({ where: { id: slotId } });
 
     if (!slot) {
@@ -55,10 +75,13 @@ async function exportBookings(req, res, next) {
       return res.status(403).json({ message: "Admin access required" });
     }
 
-    const bookings = await prisma.booking.findMany({
-      include: { slot: true },
-      orderBy: { createdAt: "desc" }
-    });
+    const bookings =
+      process.env.DEMO_MODE === "true"
+        ? demoStore.getBookings()
+        : await prisma.booking.findMany({
+            include: { slot: true },
+            orderBy: { createdAt: "desc" }
+          });
 
     const csvPath = await writeBookingsCsv(bookings);
     res.download(csvPath, "bookings.csv", () => {
@@ -75,10 +98,13 @@ async function getBookings(req, res, next) {
       return res.status(403).json({ message: "Admin access required" });
     }
 
-    const bookings = await prisma.booking.findMany({
-      include: { slot: true },
-      orderBy: { createdAt: "desc" }
-    });
+    const bookings =
+      process.env.DEMO_MODE === "true"
+        ? demoStore.getBookings()
+        : await prisma.booking.findMany({
+            include: { slot: true },
+            orderBy: { createdAt: "desc" }
+          });
 
     return res.json(bookings);
   } catch (error) {
@@ -93,6 +119,27 @@ async function cancelBooking(req, res, next) {
     }
 
     const bookingId = Number(req.params.id);
+    const isDemoMode = process.env.DEMO_MODE === "true";
+
+    if (isDemoMode) {
+      const result = demoStore.cancelBooking(bookingId);
+      if (result.error === "NOT_FOUND") {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+
+      sendBookingCancellation({
+        to: result.booking.email,
+        name: result.booking.name,
+        slot: {
+          date: result.slot.date.toISOString().slice(0, 10),
+          startTime: result.slot.startTime,
+          endTime: result.slot.endTime
+        }
+      }).catch(() => {});
+
+      return res.json({ message: "Booking cancelled" });
+    }
+
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
       include: { slot: true }

@@ -14,7 +14,8 @@ npm run dev
 
 - `/` Home
 - `/book` Public booking form
-- `/admin/login` Admin login
+- `/staff-access` Staff access code gate
+- `/admin/login` Admin login (after access code)
 - `/admin/dashboard` Admin overview
 - `/admin/slots` Add/delete slots
 - `/admin/bookings` View/cancel bookings + CSV export
@@ -26,3 +27,5 @@ Set in `.env.local`:
 ```bash
 NEXT_PUBLIC_API_BASE_URL=http://localhost:5000
 ```
+
+Admin area is intentionally hidden from public navigation and only opened through `/staff-access`.

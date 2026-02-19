@@ -2,19 +2,27 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getToken } from "@/lib/auth";
+import { getAccessCode, getToken } from "@/lib/auth";
 
 export default function useRequireAdmin() {
   const router = useRouter();
   const hasWindow = typeof window !== "undefined";
+  const accessCode = hasWindow ? getAccessCode() : "";
   const token = hasWindow ? getToken() : "";
-  const ready = hasWindow && Boolean(token);
+  const ready = hasWindow && Boolean(accessCode) && Boolean(token);
 
   useEffect(() => {
-    if (hasWindow && !token) {
+    if (!hasWindow) return;
+
+    if (!accessCode) {
+      router.replace("/staff-access");
+      return;
+    }
+
+    if (!token) {
       router.replace("/admin/login");
     }
-  }, [hasWindow, token, router]);
+  }, [hasWindow, accessCode, token, router]);
 
-  return { token, ready };
+  return { token, accessCode, ready };
 }

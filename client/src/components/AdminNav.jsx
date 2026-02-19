@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { clearToken } from "@/lib/auth";
+import { clearAccessCode, clearToken } from "@/lib/auth";
 
 const LINKS = [
   { href: "/admin/dashboard", label: "Dashboard" },
@@ -16,7 +16,8 @@ export default function AdminNav() {
 
   function logout() {
     clearToken();
-    router.push("/admin/login");
+    clearAccessCode();
+    router.push("/staff-access");
   }
 
   return (

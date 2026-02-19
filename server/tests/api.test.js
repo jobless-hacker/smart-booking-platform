@@ -1,6 +1,8 @@
 const request = require("supertest");
 const bcrypt = require("bcrypt");
 
+process.env.ADMIN_ACCESS_CODE = "";
+
 const mockPrisma = {
   user: {
     findUnique: jest.fn()

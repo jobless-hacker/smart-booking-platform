@@ -8,6 +8,7 @@ cp .env.example .env
 npx prisma migrate dev --name init
 npm run admin:create
 npm run dev
+npm test
 ```
 
 ## Routes
